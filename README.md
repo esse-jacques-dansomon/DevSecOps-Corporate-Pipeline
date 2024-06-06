@@ -1,4 +1,4 @@
-![devopsdrawio.png](assets/devops.drawio.png)
+![assets/devops.drawio.png](assets/devops.jpg)
 
 # Corporate CI/CD DevOps Pipeline
 
