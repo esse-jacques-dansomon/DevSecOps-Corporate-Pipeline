@@ -26,7 +26,6 @@ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.
 sudo apt update
 
 sudo apt install -y kubeadm=1.28.1-1.1 kubelet=1.28.1-1.1 kubectl=1.28.1-1.1
-sudo apt install -y kubelet=1.26.5-00 kubeadm=1.26.5-00 kubectl=1.26.5-00
 ```
 
 ```shell
@@ -39,6 +38,12 @@ sudo chmod +x 01.sh
 **ONLY ON MASTER NODE**
 ```shell
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+
+
+--------------------
+sudo kubeadm reset
+kubeadm join 172.31.55.142:6443 --token 54951k.h24z65ggn97aosur \
+        --discovery-token-ca-cert-hash sha256:b81aa38f51b84edb78883d8527a87aa8399c4a45a9b5250120c620706da8ffea 
 ```
 
 After this commande you will see a command to add workers node to your cluster 
@@ -62,5 +67,106 @@ kubectl get nodes
 
 ## 3. Setup namespace and Users for the CICD
 
+### Generate a token 
 
+#### 1. Create a new namespace
+
+```shell
+kubectl create ns webapps
+```
+#### 2. Create a new `ServiceAccount`
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins
+  namespace: webapps
+```
+save the file as **svc.yaml**
+
+```shell
+kubectl apply -f svc.yaml -n webapps
+```
+
+#### 3. Create a new `Role`
+
+```groovy
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-role
+  namespace: webapps
+rules:
+  - apiGroups:
+      - ""
+      - apps
+      - autoscaling
+      - batch
+      - extensions
+      - policy
+      - rbac.authorization.k8s.io
+    resources:
+      - pods
+      - secrets
+      - componentstatuses
+      - configmaps
+      - daemonsets
+      - deployments
+      - events
+      - endpoints
+      - horizontalpodautoscalers
+      - ingress
+      - jobs
+      - limitranges
+      - namespaces
+      - nodes
+      - pods
+      - persistentvolumes
+      - persistentvolumeclaims
+      - resourcequotas
+      - replicasets
+      - replicationcontrollers
+      - serviceaccounts
+      - services
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+```
+
+save the file as **role.yaml**
+
+```shell
+kubectl apply -f role.yaml -n webapps
+```
+
+#### 4. Bin the `Role` to a  `ServiceAccount`
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins
+  namespace: webapps
+```
+save the file as **bind.yaml**
+
+```shell
+kubectl apply -f bind.yaml 
+```
+
+#### 5. create a secret for the service account
+
+```yaml
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: mysecretname
+  annotations:
+    kubernetes.io/service-account.name: jenkins
+```
+save the file as **sec.yaml**
+
+```shell
+kubectl apply -f sec.yaml -n webapps
+```
 

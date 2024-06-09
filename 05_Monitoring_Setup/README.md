@@ -114,3 +114,20 @@ kill $(pgrep prometheus) && ./prometheus &
 1. login 
 2. add prometheus as Datasource 
 3. import dashboards: blackbox_exporter and node_exporter
+
+
+## Kubernetes Monitoring with Helm
+
+![img.png](img.png)
+
+### Install 
+
+```shell
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+helm repo add Prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm show values prometheus-community/kube-prometheus-stack
+helm install prometheus prometheus-community/kube-prometheus-stack --timeout 10m0s
+```
